@@ -23,7 +23,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true })); // For form data
 
 
 var status="0";
-mongoose.connect(process.env.MONGODB_URI)
+  mongoose.connect(process.env.MONGODB_URI)
   .then(async () => {
     console.log('Connected to MongoDB');
     status = "1";
@@ -32,6 +32,7 @@ mongoose.connect(process.env.MONGODB_URI)
       const user = await User.findOne({ username: 'admin' });
       if (user) {
         console.log('Admin user already exists');
+        status = "22";
       } else {
         const adminUser = new User({
           username: 'admin',
@@ -40,6 +41,7 @@ mongoose.connect(process.env.MONGODB_URI)
         });
 
         await adminUser.save();
+        status = "2";
         console.log('Admin user created');
       }
     } catch (err) {
