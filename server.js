@@ -23,34 +23,28 @@ app.use(express.urlencoded({ limit: '50mb', extended: true })); // For form data
 
 
 var status="0";
-
 mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log('Connected to MongoDB');
-    status="1";
+    status = "1";
     
-    // Check if the admin user already exists
-    User.findOne({ username: 'admin' }, (err, user) => {
-      if (err) {
-        console.error('Error checking for admin user', err);
-        return;
-      }
-
+    try {
+      const user = await User.findOne({ username: 'admin' });
       if (user) {
         console.log('Admin user already exists');
       } else {
-        // Create a new user instance if not exist
         const adminUser = new User({
           username: 'admin',
           password: 'safwan123', // Remember to hash the password in a real-world application
           userType: 'admin'
         });
 
-        adminUser.save()
-          .then(() => console.log('Admin user created'))
-          .catch(err => console.error('Error creating admin user', err));
+        await adminUser.save();
+        console.log('Admin user created');
       }
-    });
+    } catch (err) {
+      console.error('Error checking for admin user', err);
+    }
   })
 app.get('/', (req, res) => {
   res.send('Hello from the Node.js backend!'+status);
