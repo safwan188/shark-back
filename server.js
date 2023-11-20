@@ -41,7 +41,8 @@ mongoose.connect(process.env.MONGODB_URI)
         // Create a new user instance if not exist
         const adminUser = new User({
           username: 'admin',
-          password: 'safwan123' // Remember to hash the password in a real-world application
+          password: 'safwan123', // Remember to hash the password in a real-world application
+          userType: 'admin'
         });
 
         adminUser.save()
