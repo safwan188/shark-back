@@ -10,7 +10,7 @@ const customerRoutes = require('./routes/CustomerRoutes'); // Make sure this pat
 const app = express();
 const userRoutes = require('./routes/UserRoutes'); // Make sure this path is correct
 const expertRequestRoutes = require('./routes/ExpertRequestsRoutes'); // Make sure this path is correct
-
+const User = require('./models/User');
 const path = require('path');
 const upload = require('./Middleware/multerConfig'); // update with the actual path to multerConfig.js
 
@@ -22,11 +22,12 @@ app.use(express.urlencoded({ limit: '50mb', extended: true })); // For form data
 // Set up multer to save uploaded files
 
 
-
+var status="0";
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('Connected to MongoDB');
+    status="1";
     
     // Check if the admin user already exists
     User.findOne({ username: 'admin' }, (err, user) => {
@@ -52,7 +53,7 @@ mongoose.connect(process.env.MONGODB_URI)
     });
   })
 app.get('/', (req, res) => {
-  res.send('Hello from the Node.js backend!');
+  res.send('Hello from the Node.js backend!'+status);
 });
 
 app.use('/uploads', express.static('uploads'));
