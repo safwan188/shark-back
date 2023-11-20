@@ -38,6 +38,7 @@ var status="0";
           username: 'admin',
           password: 'safwan123', // Remember to hash the password in a real-world application
           userType: 'admin'
+          ,name:"safwan"
         });
 
         await adminUser.save();
