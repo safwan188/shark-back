@@ -2,6 +2,8 @@
 // Import any necessary dependencies
 const Expert = require('../models/Experts');
 const User = require('../models/User');
+const bcrypt = require('bcrypt');
+const saltRounds = 10; // or another number you prefer
 // Define controller methods
 const expertController = {
   // Get all experts
@@ -23,15 +25,15 @@ const expertController = {
       const newExperts = await Expert.insertMany(experts);
 
       // Construct an array of usernames and passwords for the new experts
-      const users = newExperts.map((expert) => {
+      const users = newExperts.map(async (expert) => {
         const username = expert.tz;
-        const password = expert.tz + expert.phone.slice(-3); // Assuming 'phone' is a string
+        const password = await bcrypt.hash(  expert.tz + expert.phone.slice(-3) ,saltRounds);// Assuming 'phone' is a string
 
         return {
           username: username,
-         
+          password: password, 
           userType: 'inspector'
-          ,name:expert.name
+          ,name:expert.name,
         };
       });
 
@@ -39,7 +41,7 @@ const expertController = {
       const newUsers = await User.insertMany(users);
 
       // Respond with the new expert and user data
-      res.status(201).json({ experts: newExperts, users: newUsers });
+      res.status(201).json({ experts: newExperts,  });
     } catch (error) {
       res.status(400).json({ message: 'Failed to create experts.', error: error.message });
     }
