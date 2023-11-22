@@ -13,6 +13,32 @@ const expertRequestRoutes = require('./routes/ExpertRequestsRoutes'); // Make su
 const User = require('./models/User');
 const path = require('path');
 const upload = require('./Middleware/multerConfig'); // update with the actual path to multerConfig.js
+const bcrypt = require('bcrypt');
+const saltRounds = 10; // Adjust salt rounds as needed
+
+const createAdminUser = async () => {
+  try {
+    const user = await User.findOne({ username: 'admin' });
+    if (user) {
+      console.log('Admin user already exists');
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, saltRounds);
+
+    const adminUser = new User({
+      username: 'admin',
+      password: hashedPassword,
+      userType: 'admin',
+      name: 'safwan'
+    });
+
+    await adminUser.save();
+    console.log('Admin user created');
+  } catch (err) {
+    console.error('Error creating admin user', err);
+  }
+};
 
 app.use(cors());
 app.use(express.json());
@@ -27,27 +53,9 @@ var status="0";
   .then(async () => {
     console.log('Connected to MongoDB');
     status = "1";
+    await createAdminUser();
+    status = "2";
     
-    try {
-      const user = await User.findOne({ username: 'admin' });
-      if (user) {
-        console.log('Admin user already exists');
-        status = "22";
-      } else {
-        const adminUser = new User({
-          username: 'admin',
-          password: 'safwan123', // Remember to hash the password in a real-world application
-          userType: 'admin'
-          ,name:"safwan"
-        });
-
-        await adminUser.save();
-        status = "2";
-        console.log('Admin user created');
-      }
-    } catch (err) {
-      console.error('Error checking for admin user', err);
-    }
   })
 app.get('/', (req, res) => {
   res.send('Hello from the Node.js backend!'+status);
