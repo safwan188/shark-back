@@ -19,33 +19,41 @@ const expertController = {
   // Create multiple experts
   createMultipleExperts: async (req, res) => {
     const experts = req.body;
-
+    const saltRounds = 10; // Define the saltRounds for bcrypt
+  
     try {
-      // Save all the new experts
-      const newExperts = await Expert.insertMany(experts);
-
-      // Construct an array of usernames and passwords for the new experts
-      const users = newExperts.map(async (expert) => {
-        const username = expert.tz;
-        const password = await bcrypt.hash(  expert.tz + expert.phone.slice(-3) ,saltRounds);// Assuming 'phone' is a string
-
-        return {
+      let newExperts = [];
+      let newUsers = [];
+  
+      for (const expert of experts) {
+        // Save each expert individually
+        const newExpert = new Expert(expert);
+        await newExpert.save();
+        newExperts.push(newExpert);
+  
+        // Create a corresponding user for each expert
+        const username = newExpert.tz;
+        const password = await bcrypt.hash(newExpert.tz + newExpert.phone.slice(-3), saltRounds);
+  
+        const newUser = new User({
           username: username,
-          password: password, 
-          userType: 'inspector'
-          ,name:expert.name,
-        };
-      });
-
-      // Save all the new users
-      const newUsers = await User.insertMany(users);
-
-      // Respond with the new expert and user data
-      res.status(201).json({ experts: newExperts,  });
+          password: password,
+          userType: 'inspector',
+          name: newExpert.name
+        });
+  
+        // Save each user individually
+        await newUser.save();
+        newUsers.push(newUser);
+      }
+  
+      // Respond with the new expert data
+      res.status(201).json({ message: 'Experts created successfully',});
     } catch (error) {
       res.status(400).json({ message: 'Failed to create experts.', error: error.message });
     }
   },
+  
 getExpertBytz: async (req, res) => {
     try {
       const expert = await Expert.findOne({tz:req.user.username});
