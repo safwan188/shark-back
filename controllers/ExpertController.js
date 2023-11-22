@@ -29,7 +29,7 @@ const expertController = {
 
         return {
           username: username,
-          password: password, // In a real-world scenario, you would hash this password before saving
+         
           userType: 'inspector'
           ,name:expert.name
         };
@@ -83,7 +83,8 @@ createExpert: async (req, res) => {
       const user = new User({
         username: username,
         password: password, // In a real-world scenario, you would hash this password before saving
-        userType: 'inspector'
+        userType: 'inspector',
+        name:newExpert.name
       });
 
       // Save the new user
@@ -97,7 +98,13 @@ createExpert: async (req, res) => {
       res.status(500).json({ message: 'Failed to create user for expert, expert not saved.', error: userError.message });
     }
   } catch (error) {
-    res.status(400).json({ message: 'Failed to create expert.', error: error.message });
+    if (error.code === 11000) {
+      // Duplicate key error
+      res.status(409).json({ message: 'Expert already exists.', error: error.message });
+    } else {
+      res.status(400).json({ message: 'Failed to create expert.', error: error.message });
+    }
+  
   }
 },
 

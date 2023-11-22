@@ -10,19 +10,20 @@ const path = require('path');
 
 // Route to GET all reports
 router.get('/', [authJwt.verifyToken], ReportController.index);
-router.put('/findings/:id', upload.array('findingsPhotos', 5), ReportController.saveimageandfindings);
+router.put('/findings/:id', upload.array('findingsPhotos', 5),[authJwt.verifyToken], ReportController.saveimageandfindings);
 router.put('/:id', ReportController.update);
 
-router.put('/updatestatus/:id', ReportController.assignExpert);
-router.get('/reportsbyexpert/:id', ReportController.getReportsByExpert);
+router.put('/updatestatus/:id',[authJwt.verifyToken], ReportController.assignExpert);
+router.get('/reportsbyexpert/:id', [authJwt.verifyToken],ReportController.getReportsByExpert);
 // Route to POST a new report
-router.post('/', ReportController.create);
+// Route to POST a new report with image upload
+router.post('/', [authJwt.verifyToken, upload.array('customerPhotos', 5)], ReportController.create);
 
 // Route to GET a single report by ID
-router.get('/:id', ReportController.show);
+router.get('/:id',[authJwt.verifyToken], ReportController.show);
 // Generate PDF report by report ID
 // Inside your Express.js route handler
-router.get('/:id/pdf', async (req, res) => {
+router.get('/:id/pdf',[authJwt.verifyToken], async (req, res) => {
     try {
       // Fetch and populate the report document
     const report = await Report.findById(req.params.id)
@@ -66,9 +67,7 @@ router.get('/:id/pdf', async (req, res) => {
   });
   
 // Route to PUT (update) a report by ID
-router.put('/:id', ReportController.update);
+router.put('/:id',[authJwt.verifyToken], ReportController.update);
 
-// Route to DELETE a report by ID
-router.delete('/:id', ReportController.delete);
 
 module.exports = router;

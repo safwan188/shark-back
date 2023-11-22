@@ -34,6 +34,10 @@ const reportSchema = new mongoose.Schema({
     type: String, // Assuming you're storing image file paths or URLs
     required: false
   }],
+  clientPhotos: [{
+    type: String, // Assuming you're storing image file paths or URLs
+    required: false
+  }],
   subject: {
     type: String,
     required: true
@@ -49,6 +53,10 @@ const reportSchema = new mongoose.Schema({
   inspectionDate: {
     type: Date,
    
+  },
+  season: {
+    type: String,
+    required: true
   },
 }, {
   timestamps: true // Automatically manage createdAt and updatedAt fields
