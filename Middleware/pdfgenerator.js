@@ -10,8 +10,8 @@ const generatePDF = async (report, outputPath) => {
     const doc = new PDFDocument();
     let output = fs.createWriteStream(outputPath);
     doc.pipe(output);
-    const footerImagePath = 'C:\\Users\\safwan\\Pictures\\Screenshots\\Screenshot 2023-10-31 022207.png';
-    const headerImagePath = 'C:\\Users\\safwan\\Pictures\\Screenshots\\Screenshot 2023-10-31 022152.png';
+    const footerImagePath = './uploads/equipment/footer.png';
+    const headerImagePath = './uploads/equipment/header.png';
     const footerImageY = doc.page.height - 60; // Position the footer image 60 units from the bottom of the page
 
     const hebrewFontPath = './font/arial-hebrew.ttf'; // Adjust the path as needed
