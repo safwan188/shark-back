@@ -22,6 +22,20 @@ async index(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+async getOpenReports(req, res) {
+  try {
+    const reports = await Report.find({status:"open"})
+      .populate('customer')  // Assumes 'customer' is the field name
+      .populate('property');  // Assumes 'property' is the field name
+      res.status(200).json(reports);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+    // If you only want to select specific fields from the populated documents, you can do it like this:
+    // .populate({ path: 'expert', select: 'name title -_id' }) // Excluding the id with '-_id'
+    
   // Create a new report
   async create(req, res) {
     try {
