@@ -39,7 +39,7 @@ router.get('/:id/pdf',[authJwt.verifyToken], async (req, res) => {
       // Define the filename for the PDF
       const fileName = `report-${report.index}.pdf`;
       // Define the outputPath as an absolute path
-      const outputPath = path.join('/uploads/pdf', fileName); // Adjust the directory as needed
+      const outputPath = path.join('./uploads/pdf', fileName); // Adjust the directory as needed
   
       // Call your generatePDF function
       await generatePDF(report, outputPath);
