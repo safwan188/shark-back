@@ -147,7 +147,7 @@ async getOpenReports(req, res) {
   
   async getReportsByExpert(req, res) {
     try {
-      const report = await Report.find({expert:req.params.id})
+      const report = await Report.find({expert:req.params.id,status:"assigned"})
       .populate('expert')  // Assumes 'expert' is the field name in Report model
       .populate('customer')  // Assumes 'customer' is the field name
       .populate('property');  // Assumes 'property' is the field name
