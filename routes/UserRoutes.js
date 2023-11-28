@@ -16,7 +16,7 @@ const authJwt = require('../Middleware/auth');
 
 // Route for user login
 router.post('/login', UserController.loginAdmin);
-router.post('/loginExpert', UserController.loginExpert);
+router.post('/loginExpert', UserController.loginInspector);
 // Route for user registration
 //router.post('/register', UserController.registerUser);
 
