@@ -2,7 +2,7 @@ const User = require('../models/User'); // Import the User model
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const saltRounds = 10; // or another number you prefer
-
+const Expert = require('../models/Expert');
 const UserController = {
   // Create a new user
   createUser: async (req, res) => {
@@ -64,7 +64,7 @@ const UserController = {
     }
   },
 // Login a user
-loginUser: async (req, res) => {
+loginAdmin: async (req, res) => {
   try {
     const user = await User.findOne({ username: req.body.username });
     if (!user) {
@@ -88,7 +88,34 @@ loginUser: async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 },
+loginInspector: async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.body.username });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
+    // Compare the provided password with the hashed password
+    const validPassword = await bcrypt.compare(req.body.password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ message: 'Incorrect password' });
+    }
+
+    // Generate a token
+    const token = jwt.sign(
+      { id: user._id, username: user.username, name: user.name },
+      process.env.JWT_SECRET,
+      { expiresIn: '5h' } // Token expires in 5 hours
+    );
+    const expert= await Expert.findOne({tz:user.username});
+    if (!expert) {
+      return res.status(404).json({ message: 'Expert not found' });
+    }
+    res.status(200).json({ token: token, name: user.name });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+},
 // Register a user
 registerUser: async (req, res) => {
   try {

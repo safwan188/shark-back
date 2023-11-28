@@ -10,7 +10,9 @@ const path = require('path');
 
 // Route to GET all reports
 router.get('/', [authJwt.verifyToken], ReportController.index);
+// route for expert to post his findings and findings photos
 router.put('/findings/:id', upload.array('findingsPhotos', 5),[authJwt.verifyToken], ReportController.saveimageandfindings);
+
 router.put('/:id', ReportController.update);
 router.get('/getopen', [authJwt.verifyToken], ReportController.getOpenReports);
 
