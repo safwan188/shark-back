@@ -111,7 +111,7 @@ loginInspector: async (req, res) => {
     if (!expert) {
       return res.status(404).json({ message: 'Expert not found' });
     }
-    res.status(200).json({ token: token, name: user.name });
+    res.status(200).json({ token: token, name: user.name,expert:expert._id });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
