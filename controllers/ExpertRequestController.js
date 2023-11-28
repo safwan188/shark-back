@@ -21,9 +21,14 @@ const createRequest = async (req, res) => {
 };
 const getAllRequests = async (req, res) => {
   try {
-    // Assuming 'report' has fields 'property' and 'customer' that you want to populate
     const expertRequests = await ExpertRequest.find()
-      .populate('report')
+      .populate({
+        path: 'report',
+        populate: [
+          { path: 'property' }, // Assuming 'property' is a ref in 'report'
+          { path: 'customer' }  // Assuming 'customer' is a ref in 'report'
+        ]
+      })
       .populate('expert'); // Populates 'expert' within 'ExpertRequest'
     
     res.json(expertRequests);
@@ -31,6 +36,7 @@ const getAllRequests = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 const getRequest = async (req, res) => {
     try {
