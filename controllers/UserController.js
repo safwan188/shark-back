@@ -2,7 +2,7 @@ const User = require('../models/User'); // Import the User model
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const saltRounds = 10; // or another number you prefer
-const Expert = require('../models/Expert');
+const Expert = require('../models/Experts');
 const UserController = {
   // Create a new user
   createUser: async (req, res) => {
