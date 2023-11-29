@@ -301,10 +301,17 @@ doc.fillColor('black')
       for (let j = 0; j < 4; j++) {
         if (i + j < report.findingsPhotos.length) {
           const photoPath = report.findingsPhotos[i + j];
+          try {
+            const response = await axios({
+                method: 'get',
+                url: photoURL,
+                responseType: 'stream'
+            });
+
           // Check if the image file exists in the given path
-          if (fs.existsSync(photoPath)) {
+          if (photoPat){
             const position = positions[j];
-            doc.image(photoPath, position.x, position.y, { width: imageSize2, height: imageSize2 });
+            doc.image(response.data, position.x, position.y, { width: imageSize2, height: imageSize2 });
           } else {
             console.error(`File not found: ${photoPath}`); // Handle missing files as needed
           }
