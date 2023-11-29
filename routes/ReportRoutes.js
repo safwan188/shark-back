@@ -54,21 +54,7 @@ router.get('/:id/pdf',[authJwt.verifyToken], async (req, res) => {
       if (!report) {
         return res.status(404).send('Report not found');
       }
-      if (report.clientPhotos && report.clientPhotos.length > 0) {
-        const signedUrls = await Promise.all(report.clientPhotos.map(async (photo) => {
-          // Assuming 'photo' contains the file name or partial path in the bucket
-          return generateSignedUrl(photo);
-        }));
-        const findingsph = await Promise.all(report.findingsPhotos.map(async (photo) => {
-          // Assuming 'photo' contains the file name or partial path in the bucket
-          return generateSignedUrl(photo);
-        }));
-
-
-        // You can either replace the clientPhotos with signed URLs or create a new field
-        report.clientPhotos = signedUrls;
-        report.findingsPhotos = findingsph;
-      }
+      
       // Define the filename for the PDF
       const fileName = `report-${report.index}.pdf`;
       // Define the outputPath as an absolute path
