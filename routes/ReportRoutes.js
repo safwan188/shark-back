@@ -7,6 +7,7 @@ const { generatePDF } = require('../Middleware/pdfgenerator'); // Use correct pa
 const fs = require('fs');
 const Report = require('../models/Report');
 const path = require('path');
+const { bucket } = require('../googleCloudStorage'); // Update with the correct path
 
 // Route to GET all reports
 router.get('/', [authJwt.verifyToken], ReportController.index);
