@@ -1,6 +1,6 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
-
+const axios = require('axios');
 const generatePDF = async (report, outputPath) => {
   function reverseWords(str) {
     return str.split(/\s+/).reverse().join(' ');
