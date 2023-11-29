@@ -1,10 +1,24 @@
 
 const Report = require('../models/Report');
+const { bucket } = require('../googleCloudStorage'); // Update with the correct path
+const { storage } = require('../googleCloudStorage');
 const ExpertRequest = require('../models/ExpertRequest');
-class ReportController {
-   getSeason = (date) => {
-   
+async  function generateSignedUrl(fileName) {
+  const options = {
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 15 * 60 * 1000, // URL expires in 15 minutes
   };
+
+  try {
+    const [url] = await bucket.file(fileName).getSignedUrl(options);
+    return url;
+  } catch (error) {
+    console.error('Error generating signed URL:', error);
+    throw error;
+  }
+}
+class ReportController {
   // Get all reports
 // Get all reports with referenced documents populated
 async index(req, res) {
@@ -33,13 +47,35 @@ async getOpenReports(req, res) {
     res.status(500).json({ error: error.message });
   }
 }
+
+
     // If you only want to select specific fields from the populated documents, you can do it like this:
     // .populate({ path: 'expert', select: 'name title -_id' }) // Excluding the id with '-_id'
     
   // Create a new report
   async create(req, res) {
     try {
-      const imagePaths = req.files ? req.files.map(file => file.path) : [];
+      const clientPhotos = [];
+
+      if (req.files) {
+          const uploadPromises = req.files.map((file) =>
+              new Promise((resolve, reject) => {
+                  const blob = bucket.file(file.originalname);
+                  const blobStream = blob.createWriteStream();
+
+                  blobStream.on('error', (err) => reject(err));
+                  blobStream.on('finish', () => {
+                      const publicUrl = `${blob.name}`;
+                      resolve(publicUrl);
+                  });
+
+                  blobStream.end(file.buffer);
+              })
+          );
+
+          // Await all the upload promises
+          clientPhotos.push(...(await Promise.all(uploadPromises)));
+      }
       const date = new Date();
       const month = date.getMonth() + 1; // JavaScript months are 0-indexed
       const day = date.getDate();
@@ -56,7 +92,7 @@ async getOpenReports(req, res) {
       // Create a new report with the request body and image paths
       const reportData = {
         ...req.body,
-        clientPhotos: imagePaths, // Add image paths to the report
+        clientPhotos: clientPhotos, // Add image paths to the report
         status: "open",
         season:season, // Calculate current season
       };
@@ -77,6 +113,15 @@ async getOpenReports(req, res) {
       .populate('property');  // Assumes 'property' is the field name
       
       if (!report) throw new Error('Report not found');
+      if (report.clientPhotos && report.clientPhotos.length > 0) {
+        const signedUrls = await Promise.all(report.clientPhotos.map(async (photo) => {
+          // Assuming 'photo' contains the file name or partial path in the bucket
+          return generateSignedUrl(photo);
+        }));
+
+        // You can either replace the clientPhotos with signed URLs or create a new field
+        report.clientPhotos = signedUrls;
+      }
       res.status(200).json(report);
     } catch (error) {
       res.status(404).json({ error: error.message });
@@ -97,22 +142,41 @@ async getOpenReports(req, res) {
   // Update a report by ID
   async assignExpert(req, res) {
     try {
-      const { expert,  inspectionDate,expertRequest } = req.body;
-      if (!expert || !inspectionDate ) {
-        return res.status(400).json({ message: 'Expert, inspectionDate and expertRequest must be provided' });
-      }
+        const { expert, inspectionDate, expertRequest } = req.body;
+        if (!expert || !inspectionDate) {
+            return res.status(400).json({ message: 'Expert, inspectionDate, and expertRequest must be provided' });
+        }
 
-      const report = await Report.findByIdAndUpdate(req.params.id,{expert:expert,inspectionDate:inspectionDate,status:"assigned",} , { new: true });
-      if (!report) throw new Error('Report not found');
-      if (expertRequest){
-      const expertRequest1 = await ExpertRequest.findByIdAndUpdate(expertRequest,{status:"accepted"}, { new: true });
-      if (!expertRequest1) throw new Error('ExpertRequest not found');
-      }
-      res.status(200).json(report);
+        // Update the report with the new expert and inspection date
+        const report = await Report.findByIdAndUpdate(
+            req.params.id,
+            { expert: expert, inspectionDate: inspectionDate, status: "assigned" },
+            { new: true }
+        );
+        if (!report) throw new Error('Report not found');
+
+        // If expertRequest is provided, accept it
+        if (expertRequest) {
+            const expertRequestUpdate = await ExpertRequest.findByIdAndUpdate(
+                expertRequest,
+                { status: "accepted" },
+                { new: true }
+            );
+
+            if (!expertRequestUpdate) throw new Error('ExpertRequest not found');
+
+            // Reject other expert requests linked to the same report
+            await ExpertRequest.updateMany(
+                { _id: { $ne: expertRequest }, report: report._id },
+                { status: "rejected" }
+            );
+        }
+
+        res.status(200).json(report);
     } catch (error) {
-      res.status(404).json({ error: error.message });
+        res.status(404).json({ error: error.message });
     }
-  }
+}
 
   // Delete a report by ID
   async delete(req, res) {
@@ -126,14 +190,37 @@ async getOpenReports(req, res) {
   }
   async saveimageandfindings(req, res) {
     try {
-      // `req.files` contains information about the uploaded files.
-      // You can process and save this information as needed.
-      // For example, you could save the file paths to the report.
-      const imagePaths = req.files.map(file => file.path);
-  
+      const findingsPhotos = [];
+
+      if (req.files) {
+        const uploadPromises = req.files.map((file) =>
+          new Promise((resolve, reject) => {
+            const uniqueFileName = this.generateUniqueFileName(file.originalname);
+            const blob = bucket.file(uniqueFileName);
+            const blobStream = blob.createWriteStream({
+              resumable: false,
+            });
+
+            blobStream.on('error', (err) => reject(err));
+            blobStream.on('finish', async () => {
+              // Here, you might choose to generate a signed URL instead
+              // const signedUrl = await this.generateSignedUrl(uniqueFileName);
+              // resolve(signedUrl);
+
+              const publicUrl = `${blob.name}`;
+              resolve(publicUrl);
+            });
+
+            blobStream.end(file.buffer);
+          })
+        );
+
+        findingsPhotos.push(...(await Promise.all(uploadPromises)));
+      }
+
       const report = await Report.findByIdAndUpdate(
         req.params.id,
-        { findings: req.body.findings, findingsPhotos: imagePaths,status:"completed" },
+        { findings: req.body.findings, findingsPhotos: findingsPhotos, status: "completed" },
         { new: true }
       );
       

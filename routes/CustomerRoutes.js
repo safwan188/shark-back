@@ -25,7 +25,5 @@ router.get('/:id/properties',[  authJwt.verifyToken], customerController.getProp
 // Update a customer by ID
 router.put('/:id',[  authJwt.verifyToken], customerController.updateCustomer);
 
-// Delete a customer by ID
-router.delete('/:id', [  authJwt.verifyToken],customerController.deleteCustomer);
 
 module.exports = router;
