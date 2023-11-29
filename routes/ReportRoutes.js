@@ -17,7 +17,7 @@ router.put('/:id', ReportController.update);
 router.get('/getopen', [authJwt.verifyToken], ReportController.getOpenReports);
 
 router.put('/updatestatus/:id',[authJwt.verifyToken], ReportController.assignExpert);
-router.get('/reportsbyexpert/:id', [authJwt.verifyToken],ReportController.getReportsByExpert);
+router.put('/reportsbyexpert/:id', [authJwt.verifyToken],ReportController.getReportsByExpert);
 // Route to POST a new report
 // Route to POST a new report with image upload
 router.post('/', [authJwt.verifyToken, upload.array('customerPhotos', 5)], ReportController.create);
