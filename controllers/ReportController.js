@@ -118,9 +118,15 @@ async getOpenReports(req, res) {
           // Assuming 'photo' contains the file name or partial path in the bucket
           return generateSignedUrl(photo);
         }));
+        const findingsph = await Promise.all(report.findingsPhotos.map(async (photo) => {
+          // Assuming 'photo' contains the file name or partial path in the bucket
+          return generateSignedUrl(photo);
+        }));
+
 
         // You can either replace the clientPhotos with signed URLs or create a new field
         report.clientPhotos = signedUrls;
+        report.findingsPhotos = findingsph;
       }
       res.status(200).json(report);
     } catch (error) {
