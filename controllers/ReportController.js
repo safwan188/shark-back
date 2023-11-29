@@ -178,7 +178,7 @@ async getOpenReports(req, res) {
       if (req.files) {
         const uploadPromises = req.files.map((file) =>
           new Promise((resolve, reject) => {
-            const uniqueFileName = this.generateUniqueFileName(file.originalname);
+            const uniqueFileName = file.originalname;
             const blob = bucket.file(uniqueFileName);
             const blobStream = blob.createWriteStream({
               resumable: false,
