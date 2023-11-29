@@ -6,7 +6,7 @@ const generatePDF = async (report, outputPath) => {
     return str.split(/\s+/).reverse().join(' ');
   }
   
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const doc = new PDFDocument();
     let output = fs.createWriteStream(outputPath);
     doc.pipe(output);
@@ -304,17 +304,15 @@ doc.fillColor('black')
           try {
             const response = await axios({
                 method: 'get',
-                url: photoURL,
+                url: photoPath,
                 responseType: 'stream'
             });
 
-          // Check if the image file exists in the given path
-          if (photoPat){
             const position = positions[j];
             doc.image(response.data, position.x, position.y, { width: imageSize2, height: imageSize2 });
-          } else {
-            console.error(`File not found: ${photoPath}`); // Handle missing files as needed
-          }
+        } catch (error) {
+            console.error(`Error fetching image: ${photoURL}, Error: ${error}`);
+        }
         }
       }
     }
