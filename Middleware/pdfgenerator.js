@@ -1,7 +1,9 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const { bucket } = require('../googleCloudStorage');
-
+const path = require('path');
+const util = require('util');
+const streamPipeline = util.promisify(require('stream').pipeline);
 const generatePDF = async (report, outputPath) => {
   function reverseWords(str) {
     return str.split(/\s+/).reverse().join(' ');
@@ -286,41 +288,35 @@ doc.fillColor('black')
 
   // Ensure that report.findingsPhotos is defined and is an array
   if (Array.isArray(report.findingsPhotos)) {
-    // Iterate over each photo URL in sets of four
     for (let i = 0; i < report.findingsPhotos.length; i += 4) {
-      doc.addPage(); // Add a new page for each set of four images
+      doc.addPage();
 
-      // Calculate positions for the 2x2 grid
       const positions = [
-        { x: imageSpacing, y: imageSpacing+100 }, // Top-left
-        { x: doc.page.width / 2, y: imageSpacing+100 }, // Top-right
-        { x: imageSpacing, y: doc.page.height / 2 }, // Bottom-left
-        { x: doc.page.width / 2, y: doc.page.height / 2 } // Bottom-right
+        { x: imageSpacing, y: imageSpacing + 100 },
+        { x: doc.page.width / 2, y: imageSpacing + 100 },
+        { x: imageSpacing, y: doc.page.height / 2 },
+        { x: doc.page.width / 2, y: doc.page.height / 2 }
       ];
 
-      // Place each of the four images
       for (let j = 0; j < 4; j++) {
         if (i + j < report.findingsPhotos.length) {
           const photoPath = report.findingsPhotos[i + j];
-  
-          // Assuming photoPath is the path of the image in the bucket
           const file = bucket.file(photoPath);
-  
+          const localFilePath ='./uploads/findingsPhotos/'+ photoPath; // Adjust the path as needed
+
           try {
+              await streamPipeline(file.createReadStream(), fs.createWriteStream(localFilePath));
               const position = positions[j];
-              // Fetch the image stream from the bucket
-              const imageStream = file.createReadStream();
-              doc.image(imageStream, position.x, position.y, { width: imageSize2, height: imageSize2 });
+              doc.image(localFilePath, position.x, position.y, { width: imageSize2, height: imageSize2 });
           } catch (error) {
-              console.error(`Error fetching image from Google Cloud Storage: ${photoPath}, Error: ${error}`);
+              console.error(`Error downloading image from Google Cloud Storage: ${photoPath}, Error: ${error}`);
           }
         }
       }
     }
-  } else {
-    // Handle the case where report.findingsPhotos is not an array or is undefined
+} else {
     console.error('report.findingsPhotos is not defined or is not an array');
-  }
+}
 
     
     doc.end();
