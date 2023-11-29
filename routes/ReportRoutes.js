@@ -26,6 +26,21 @@ router.post('/', [authJwt.verifyToken, upload.array('customerPhotos', 5)], Repor
 router.get('/:id',[authJwt.verifyToken], ReportController.show);
 // Generate PDF report by report ID
 // Inside your Express.js route handler
+async  function generateSignedUrl(fileName) {
+  const options = {
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 15 * 60 * 1000, // URL expires in 15 minutes
+  };
+
+  try {
+    const [url] = await bucket.file(fileName).getSignedUrl(options);
+    return url;
+  } catch (error) {
+    console.error('Error generating signed URL:', error);
+    throw error;
+  }
+}
 router.get('/:id/pdf',[authJwt.verifyToken], async (req, res) => {
     try {
       // Fetch and populate the report document
