@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
-const axios = require('axios');
+const { bucket } = require('../googleCloudStorage');
+
 const generatePDF = async (report, outputPath) => {
   function reverseWords(str) {
     return str.split(/\s+/).reverse().join(' ');
@@ -301,18 +302,18 @@ doc.fillColor('black')
       for (let j = 0; j < 4; j++) {
         if (i + j < report.findingsPhotos.length) {
           const photoPath = report.findingsPhotos[i + j];
+  
+          // Assuming photoPath is the path of the image in the bucket
+          const file = bucket.file(photoPath);
+  
           try {
-            const response = await axios({
-                method: 'get',
-                url: photoPath,
-                responseType: 'stream'
-            });
-
-            const position = positions[j];
-            doc.image(response.data, position.x, position.y, { width: imageSize2, height: imageSize2 });
-        } catch (error) {
-            console.error(`Error fetching image: ${photoPath}, Error: ${error}`);
-        }
+              const position = positions[j];
+              // Fetch the image stream from the bucket
+              const imageStream = file.createReadStream();
+              doc.image(imageStream, position.x, position.y, { width: imageSize2, height: imageSize2 });
+          } catch (error) {
+              console.error(`Error fetching image from Google Cloud Storage: ${photoPath}, Error: ${error}`);
+          }
         }
       }
     }
