@@ -311,7 +311,7 @@ doc.fillColor('black')
             const position = positions[j];
             doc.image(response.data, position.x, position.y, { width: imageSize2, height: imageSize2 });
         } catch (error) {
-            console.error(`Error fetching image: ${photoURL}, Error: ${error}`);
+            console.error(`Error fetching image: ${photoPath}, Error: ${error}`);
         }
         }
       }
