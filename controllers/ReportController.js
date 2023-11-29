@@ -142,41 +142,24 @@ async getOpenReports(req, res) {
   // Update a report by ID
   async assignExpert(req, res) {
     try {
-        const { expert, inspectionDate, expertRequest } = req.body;
-        if (!expert || !inspectionDate) {
-            return res.status(400).json({ message: 'Expert, inspectionDate, and expertRequest must be provided' });
-        }
+      const { expert,  inspectionDate,expertRequest } = req.body;
+      if (!expert || !inspectionDate ) {
+        return res.status(400).json({ message: 'Expert, inspectionDate and expertRequest must be provided' });
+      }
 
-        // Update the report with the new expert and inspection date
-        const report = await Report.findByIdAndUpdate(
-            req.params.id,
-            { expert: expert, inspectionDate: inspectionDate, status: "assigned" },
-            { new: true }
-        );
-        if (!report) throw new Error('Report not found');
-
-        // If expertRequest is provided, accept it
-        if (expertRequest) {
-            const expertRequestUpdate = await ExpertRequest.findByIdAndUpdate(
-                expertRequest,
-                { status: "accepted" },
-                { new: true }
-            );
-
-            if (!expertRequestUpdate) throw new Error('ExpertRequest not found');
-
-            // Reject other expert requests linked to the same report
-            await ExpertRequest.updateMany(
-                { _id: { $ne: expertRequest }, report: report._id },
-                { status: "rejected" }
-            );
-        }
-
-        res.status(200).json(report);
+      const report = await Report.findByIdAndUpdate(req.params.id,{expert:expert,inspectionDate:inspectionDate,status:"assigned",} , { new: true });
+      if (!report) throw new Error('Report not found');
+      if (expertRequest){
+      const expertRequest1 = await ExpertRequest.findByIdAndUpdate(expertRequest,{status:"accepted"}, { new: true });
+      const expertRequest2 = await ExpertRequest.updateMany({report:report._id},{status:"rejected"}, { new: true });
+      
+      if (!expertRequest1) throw new Error('ExpertRequest not found');
+      }
+      res.status(200).json(report);
     } catch (error) {
-        res.status(404).json({ error: error.message });
+      res.status(404).json({ error: error.message });
     }
-}
+  }
 
   // Delete a report by ID
   async delete(req, res) {
