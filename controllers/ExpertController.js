@@ -87,7 +87,7 @@ createExpert: async (req, res) => {
     try {
       // Construct username and password from the new expert's details
       const username = newExpert.tz;
-      const password = newExpert.tz + newExpert.phone.slice(-3); // Assuming 'phone' is a string
+      const password = await bcrypt.hash(newExpert.tz + newExpert.phone.slice(-3), saltRounds);
 
       // Create a new user for the expert
       const user = new User({
