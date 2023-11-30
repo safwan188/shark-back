@@ -229,6 +229,16 @@ async getOpenReports(req, res) {
       .populate('property');  // Assumes 'property' is the field name
       
       if (!report) throw new Error('Report not found');
+      
+      if (report.clientPhotos && report.clientPhotos.length > 0) {
+        const signedUrls = await Promise.all(report.clientPhotos.map(async (photo) => {
+          // Assuming 'photo' contains the file name or partial path in the bucket
+          return generateSignedUrl(photo);
+        }));
+        report.clientPhotos = signedUrls;
+      }
+
+
       res.status(200).json(report);
     } catch (error) {
       res.status(404).json({ error: error.message });
