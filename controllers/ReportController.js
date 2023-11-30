@@ -39,18 +39,27 @@ async index(req, res) {
 
 async getOpenReports(req, res) {
   try {
-    const reports = await Report.find({status:"open"})
+    const reports = await Report.find({ status: "open" })
       .populate('customer')  // Assumes 'customer' is the field name
       .populate('property');  // Assumes 'property' is the field name
-      if (reports.clientPhotos && reports.clientPhotos.length > 0) {
-        const signedUrls = await Promise.all(reports.clientPhotos.map(async (photo) => {
+
+    // Check and load client photos for each report
+    const reportsWithPhotos = await Promise.all(reports.map(async (report) => {
+      if (report.clientPhotos && report.clientPhotos.length > 0) {
+        const signedUrls = await Promise.all(report.clientPhotos.map(async (photo) => {
           // Assuming 'photo' contains the file name or partial path in the bucket
           return generateSignedUrl(photo);
         }));
-        // You can either replace the clientPhotos with signed URLs or create a new field
-        reports.clientPhotos = signedUrls;
+
+      
+
+        // Replace the clientPhotos with signed URLs
+        report.clientPhotos = signedUrls;
       }
-      res.status(200).json(reports);
+      return report;
+    }));
+
+    res.status(200).json(reportsWithPhotos);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
