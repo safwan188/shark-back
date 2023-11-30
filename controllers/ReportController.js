@@ -42,6 +42,14 @@ async getOpenReports(req, res) {
     const reports = await Report.find({status:"open"})
       .populate('customer')  // Assumes 'customer' is the field name
       .populate('property');  // Assumes 'property' is the field name
+      if (reports.clientPhotos && reports.clientPhotos.length > 0) {
+        const signedUrls = await Promise.all(reports.clientPhotos.map(async (photo) => {
+          // Assuming 'photo' contains the file name or partial path in the bucket
+          return generateSignedUrl(photo);
+        }));
+        // You can either replace the clientPhotos with signed URLs or create a new field
+        reports.clientPhotos = signedUrls;
+      }
       res.status(200).json(reports);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -230,15 +238,8 @@ async getOpenReports(req, res) {
       
       if (!report) throw new Error('Report not found');
       
-      if (report.clientPhotos && report.clientPhotos.length > 0) {
-        const signedUrls = await Promise.all(report.clientPhotos.map(async (photo) => {
-          // Assuming 'photo' contains the file name or partial path in the bucket
-          return generateSignedUrl(photo);
-        }));
-        report.clientPhotos = signedUrls;
-      }
 
-
+      
       res.status(200).json(report);
     } catch (error) {
       res.status(404).json({ error: error.message });
