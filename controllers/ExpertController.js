@@ -96,9 +96,10 @@ createExpert: async (req, res) => {
         userType: 'inspector',
         name:newExpert.name
       });
-
+  
       // Save the new user
       const newUser = await user.save();
+
 
       // Respond with the new expert and user data
       res.status(201).json({ expert: newExpert, user: newUser });
